@@ -10,6 +10,8 @@
     "non-packaged",
   ],
   "ignoredRIDs":[
-    "linux-musl"
+    "linux-musl",
+    "rhel7",
+    "ubuntu" // See: https://github.com/canonical/dotnet-regular-tests/issues/2
   ]
 }
