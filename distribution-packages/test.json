@@ -10,6 +10,7 @@
   ],
   "ignoredRIDs":[
     "rhel7",
-    "linux-musl"
+    "linux-musl",
+    "ubuntu" // See: https://github.com/canonical/dotnet-regular-tests/issues/2
   ]
 }
