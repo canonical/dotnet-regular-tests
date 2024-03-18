@@ -8,6 +8,7 @@
   "cleanup": true,
   "skipWhen": [
     "runtime=mono", // mono does not use libunwind
+    "os=ubuntu,version=6", // see https://github.com/canonical/dotnet-regular-tests/issues/7
   ],
   "ignoredRIDs":[
     "alpine",
