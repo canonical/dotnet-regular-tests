@@ -6,6 +6,7 @@
   "versionSpecific": false,
   "type": "bash",
   "cleanup": true,
+  "timeoutMultiplier": 2,
   "skipWhen": [
     "vmr-ci" // template packages not published
   ],
