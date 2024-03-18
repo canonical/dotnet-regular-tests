@@ -8,6 +8,7 @@
   "cleanup": true,
   "skipWhen": [
     "runtime=mono", // mono does not use lttng
+    "ubuntu-autopkgtest-cloud", // see https://github.com/canonical/dotnet-regular-tests/issues/8
   ],
   "ignoredRIDs":[
     "alpine", // lttng <=2,13,0 is broken
