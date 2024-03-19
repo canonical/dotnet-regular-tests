@@ -6,7 +6,8 @@
   "type": "bash",
   "cleanup": true,
   "skipWhen": [
-    "vmr-ci" // workload packages not published
+    "vmr-ci", // workload packages not published
+    "ubuntu-autopkgtest-cloud", // see https://github.com/canonical/dotnet-regular-tests/issues/10
   ],
   "ignoredRIDs": [
     "alpine", // see https://github.com/redhat-developer/dotnet-regular-tests/pull/222
