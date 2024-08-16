@@ -37,16 +37,16 @@ SYSTEMD_RUN="$SYSTEMD_RUN -E DOTNET_ROOT=${DOTNET_ROOT:-}"
 # Unset DOTNET_PROCESSOR_COUNT so .NET won't return its value instead of the cgroup CPU limit.
 SYSTEMD_RUN="$SYSTEMD_RUN -E DOTNET_PROCESSOR_COUNT="
 
-memory_args="-p MemoryLimit=100M"
+memory_args="-p MemoryLimit=200M"
 if [[ $CGROUPV2 == true ]]; then
-    memory_args="-p MemoryMax=100M"
+    memory_args="-p MemoryMax=200M"
 fi
 
 mapfile -t DOTNET_LIMITS < <($SYSTEMD_RUN  -q --scope -p CPUQuota=100% $memory_args bin/Release/net*/cgroup-limit)
 
 if [ "${DOTNET_LIMITS[0]}" == "Limits:" ] &&      # Application ran.
    [ "${DOTNET_LIMITS[1]}" == "1" ] &&            # Available processors is 1.
-   [ "${DOTNET_LIMITS[2]}" -lt 100000000 ]; then  # Available memory less is than 100M.
+   [ "${DOTNET_LIMITS[2]}" -lt 200000000 ]; then  # Available memory less is than 200M.
   echo ".NET Runtime uses cgroup limits PASS"
   exit 0
 fi
