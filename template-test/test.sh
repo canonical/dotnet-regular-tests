@@ -393,7 +393,7 @@ function testTemplate {
     allCsprojs=(./*.csproj)
     firstCsproj=${allCsprojs[0]}
     if [ -f "${firstCsproj}" ]; then
-        sed -i '0,/<PropertyGroup>/s/<PropertyGroup>/<PropertyGroup><TreatWarningsAsErrors>true<\/TreatWarningsAsErrors>/' "${firstCsproj}"
+        sed -i '0,/<PropertyGroup>/s/<PropertyGroup>/<PropertyGroup><TreatWarningsAsErrors>true<\/TreatWarningsAsErrors><NuGetAudit>false<\/NuGetAudit>/' "${firstCsproj}"
     fi
 
     if [ "${action}" = "new" ] ; then
