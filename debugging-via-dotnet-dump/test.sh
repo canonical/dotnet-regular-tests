@@ -94,7 +94,7 @@ dotnet tool install -g dotnet-dump
 framework_dir=$(../dotnet-directory --framework "${sdk_version}")
 test -f "${framework_dir}/createdump"
 
-no_server=("/nodeReuse:false" "/p:UseSharedCompilation=false" "/p:UseRazorBuildServer=false")
+no_server=("/nodeReuse:false" "/p:UseSharedCompilation=false" "/p:UseRazorBuildServer=false" "/p:UsingMicrosoftNETSdkRazor=false" "/p:ScopedCssEnabled=false")
 
 heading "Running test application"
 
@@ -102,7 +102,7 @@ rm -rf TestDir
 mkdir TestDir
 cd TestDir
 
-dotnet new web
+dotnet new web --no-restore
 sed -i -e 's|.UseStartup|.UseUrls("http://localhost:5000").UseStartup|' Program.cs
 dotnet build "${no_server[@]}"
 
@@ -319,17 +319,15 @@ grep 'Attributes: *PEFile' dump.out
 grep 'MetaData start address: *0' dump.out
 
 
-# FIXME: dumpmt seems to work on 7.0.1 but not 7.0.0?
-# heading "dumpmt"
-# dump-analyze 'name2ee *!System.String' > dump.out
-# cat dump.out
-# grep 'MethodTable:' dump.out | awk '{print $2}'
-# string_method_table=$(grep 'MethodTable:' dump.out | awk '{print $2}')
-# dump-analyze "dumpmt ${string_method_table}" > dump.out
-# cat dump.out
-# grep -E '^Name:[ \n\t]+System.String' dump.out
-# grep -E "^File:[ \n\t]+${framework_dir}" dump.out
-
+heading "dumpmt"
+dump-analyze 'name2ee *!System.String' > dump.out
+cat dump.out
+grep 'MethodTable:' dump.out | awk '{print $2}'
+string_method_table=$(grep 'MethodTable:' dump.out | awk '{print $2}')
+dump-analyze "dumpmt ${string_method_table}" > dump.out
+cat dump.out
+grep -E '^Name:[ \n\t]+System.String' dump.out
+grep -E "^File:[ \n\t]+${framework_dir}" dump.out
 
 heading "dumpobj"
 dump-analyze 'dumpstackobjects' > dump.out

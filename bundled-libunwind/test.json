@@ -12,8 +12,6 @@
   ],
   "ignoredRIDs":[
     "alpine",
-    "fedora",
-    "linux-arm",
-    "rhel7"
+    "linux-arm"
   ]
 }

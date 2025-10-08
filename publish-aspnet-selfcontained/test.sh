@@ -14,15 +14,15 @@ cat > nuget.config <<EOF
 </configuration>
 EOF
 
-runtime_id="$(../runtime-id)"
+runtime_id="$(../runtime-id --sdk)"
 
 url="http://localhost:5000"
 
 dir=web
 output_dir=output
 rm -rf "$dir" "$output_dir"
-dotnet new web -o "$dir"
-dotnet publish --sc -r "$runtime_id" -o "$output_dir" "$dir" 
+dotnet new web --no-restore -o "$dir"
+dotnet publish --sc -r "$runtime_id" -o "$output_dir" /p:UsingMicrosoftNETSdkRazor=false /p:ScopedCssEnabled=false "$dir"
 
 ASPNETCORE_URLS="$url" "./$output_dir/web" &
 run_pid=$!
