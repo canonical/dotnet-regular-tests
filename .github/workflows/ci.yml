@@ -18,106 +18,116 @@ jobs:
       fail-fast: false
       matrix:
         container_image:
-          - docker.io/library/alpine:latest
-          - docker.io/library/alpine:edge
-          - quay.io/centos/centos:stream9
-          - quay.io/centos/centos:stream10
-          - registry.fedoraproject.org/fedora:42
-          - registry.fedoraproject.org/fedora:43
-          - registry.fedoraproject.org/fedora:rawhide
-          - registry.access.redhat.com/ubi8
-          - registry.access.redhat.com/ubi9
-          - registry.access.redhat.com/ubi10
+          - docker.io/library/ubuntu:22.04
+          - docker.io/library/ubuntu:24.04
+          - docker.io/library/ubuntu:25.04
+          - docker.io/library/ubuntu:25.10
+          - docker.io/library/ubuntu:26.04
         dotnet_version:
-          - "8.0"
-          - "9.0"
-          - "10.0"
-
+          - "8"
+          - "9"
+          - "10"
     container:
       image: ${{ matrix.container_image }}
       options: --security-opt seccomp=unconfined
-
+      env:
+        DEBIAN_FRONTEND: noninteractive
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - name: Enable -proposed
+        run: |
+          set -euo pipefail
+          codename=$(. /etc/os-release && echo $VERSION_CODENAME)
+          # Check if system uses DEB822 format (24.04+)
+          if [[ -d /etc/apt/sources.list.d ]] && [[ -f /etc/apt/sources.list.d/ubuntu.sources ]]; then
+            echo "Using DEB822 format (Ubuntu 24.04+)"
+            # Enable proposed pocket in DEB822 format
+            cat >> /etc/apt/sources.list.d/ubuntu.sources <<EOF
+          Types: deb
+          URIs: http://archive.ubuntu.com/ubuntu/
+          Suites: ${codename}-proposed
+          Components: main restricted universe multiverse
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          EOF
+            cat >> /etc/apt/preferences.d/dotnet-proposed <<EOF
+          Package: src:dotnet*
+          Pin: release a=${codename}-proposed
+          Pin-Priority: 990
+          EOF
+          else
+            echo "Using traditional sources.list format (Ubuntu < 24.04)"
+            # Enable proposed pocket in traditional format
+            echo "deb http://archive.ubuntu.com/ubuntu/ ${codename}-proposed main restricted universe multiverse" >> /etc/apt/sources.list
+          fi
+          echo "Proposed pocket enabled for ${codename}"
+        shell: bash
+
+      - name: Install test dependencies
+        timeout-minutes: 5
+        run: |
+          apt-get update && apt-get install --yes wget tar sudo
+          apt-get update && apt-get install --yes $(grep -A 3 '^#### apt$' README.md | tail -n 1 | tr -d '`')
+        shell: bash
 
       - name: Install .NET ${{ matrix.dotnet_version }}
-        # .NET 9 introduced the 'dotnet-sdk-aot' package
-        # .NET 8 introduced the 'dbg' packages
-        # '/etc/os-release' will also match the grep fedora for Fedora derived systems, such as CentOS.
+        id: install-dotnet
         timeout-minutes: 10
         run: |
           set -euo pipefail
+          check_and_add_ppa() {
+            local ppa=$1
+            local codename=$(. /etc/os-release && echo $VERSION_CODENAME)
+            local ppa_owner=$(echo $ppa | cut -d/ -f1)
+            local ppa_name=$(echo $ppa | cut -d/ -f2)
+            
+            if curl -sf "https://ppa.launchpadcontent.net/${ppa_owner}/${ppa_name}/ubuntu/dists/${codename}/Release" > /dev/null; then
+              echo "Adding PPA ${ppa} (supports ${codename})"
+              add-apt-repository --yes ppa:${ppa}
+            else
+              echo "Skipping PPA ${ppa} (does not support ${codename})"
+            fi
+          }
           cat /etc/os-release
-          if grep fedora /etc/os-release; then
-            if [[ ${{ matrix.dotnet_version }} == 11.* ]]; then
-              dnf install 'dnf-command(copr)' -y
-              if grep centos /etc/os-release; then
-                dnf copr enable @dotnet-sig/dotnet-preview centos-stream-10-x86_64 -y
-              else
-                dnf copr enable @dotnet-sig/dotnet-preview -y
-              fi
-            fi
-            dnf install -y dotnet-sdk-${{ matrix.dotnet_version }}
-            dnf install -y \
-              dotnet-sdk-dbg-${{ matrix.dotnet_version }} \
-              dotnet-runtime-dbg-${{ matrix.dotnet_version }} \
-              aspnetcore-runtime-dbg-${{ matrix.dotnet_version }}
-            if [[ ${{ matrix.dotnet_version }} != 8.* ]]; then
-              dnf install -y dotnet-sdk-aot-${{ matrix.dotnet_version }}
-            fi
-          elif grep alpine /etc/os-release; then
-            if grep edge /etc/os-release; then
-              echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-            fi
-            apk upgrade -a
-            apk add dotnet-sdk-${{ matrix.dotnet_version }} dotnet-doc
-            apk add \
-              dotnet-sdk-dbg-${{ matrix.dotnet_version }} \
-              dotnet-runtime-dbg-${{ matrix.dotnet_version }} \
-              aspnetcore-runtime-dbg-${{ matrix.dotnet_version }}
-            if [[ ${{ matrix.dotnet_version }} != 8.* ]]; then
-              apk add dotnet-sdk-aot-${{ matrix.dotnet_version }}
-            fi
-          fi
+          version_id=$(. /etc/os-release && echo $VERSION_ID)
+          # if release is LTS, add backports and preview PPAs
+          case "$version_id" in
+            22.04|24.04|26.04) # update this list as new LTS releases come out
+              echo "Adding backports and previews PPAs."
+              apt-get update && apt-get install --yes software-properties-common
+              check_and_add_ppa dotnet/backports
+              check_and_add_ppa dotnet/previews
+              ;;
+          esac
+          dotnet_version_number=$(echo "${{ matrix.dotnet_version }}" | cut -d' ' -f1)
+          apt-get update && apt-get install --yes --install-suggests dotnet${dotnet_version_number}
           dotnet --info
-
-      - name: Install Test dependencies
-        timeout-minutes: 5
-        run: |
-          if grep fedora /etc/os-release ; then
-            dnf install -y python3 wget $(grep '^Dependencies(dnf): ' README.md | cut -d: -f2-) --skip-broken
-          elif grep alpine /etc/os-release; then
-            apk add python3 wget curl $(grep '^Dependencies(apk): ' README.md | cut -d: -f2-)
-            echo -e '[PostgreSQL]\nDescription=PostgreSQL Unicode\nDriver=/usr/lib/psqlodbcw.so\nUsageCount=1' > /etc/odbcinst.ini
-          fi
+          echo "version-id=${version_id}" >> "$GITHUB_OUTPUT"
+        shell: bash
 
       - name: Download test runner
         run: |
           set -euo pipefail
-          wget --no-verbose https://github.com/redhat-developer/dotnet-bunny/releases/latest/download/turkey.tar.gz
+          wget --no-verbose https://github.com/canonical/dotnet-test-runner/releases/latest/download/turkey.tar.gz
           tar xf turkey.tar.gz
+        shell: bash
 
       - name: Run tests
         run: |
           set -euo pipefail
-
-          trait_flags=()
-
-          if [[ ${{ matrix.container_image }} == *ubi8 ]] ; then
-              trait_flags+=( --trait ubi8-repos )
-          fi
-          if [[ ${{ matrix.container_image }} == *ubi9 ]] ; then
-              trait_flags+=( --trait ubi9-repos )
-          fi
-          if [[ ${{ matrix.container_image }} == *ubi10 ]] ; then
-              trait_flags+=( --trait ubi10-repos )
-          fi
-
-          dotnet turkey/Turkey.dll -v --timeout 600 --trait github-ci "${trait_flags[@]}"
+          echo "Creating testrunner user"
+          useradd testrunner --create-home
+          chown --recursive testrunner:testrunner /home/testrunner/
+          mkdir TestResults
+          echo "Turkey version:"
+          dotnet turkey/Turkey.dll --version
+          echo "Running tests with .NET ${{ matrix.dotnet_version }} on ${{ matrix.container_image }}"
+          dotnet turkey/Turkey.dll -v --timeout 600 --log-directory TestResults --trait github-ci
         shell: bash
 
-      - name: Show Logs
+      - name: Upload Test Results
         if: ${{ always() }}
-        run: |
-          set -euo pipefail
-          find -iname '*.log' -exec echo {} \; -exec cat {} \;
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ format('TestResults-{0}-dotnet{1}', steps.install-dotnet.outputs.version-id, matrix.dotnet_version) }}
+          path: TestResults
