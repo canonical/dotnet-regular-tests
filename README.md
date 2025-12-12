@@ -21,7 +21,7 @@ babeltrace bash bash-completion binutils coreutils file findutils g++ jq libstdc
 #### apt
 
 ```
-babeltrace bash bash-completion build-essential coreutils file findutils jq libbrotli-dev lldb lttng-tools sed strace npm postgresql unixodbc zlib1g-dev
+babeltrace bash bash-completion bc build-essential coreutils curl file findutils jq libbrotli-dev lldb lttng-tools sed strace npm postgresql unixodbc zlib1g-dev
 ```
 
 #### dnf
