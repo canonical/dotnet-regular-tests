@@ -69,6 +69,7 @@ jobs:
             if grep edge /etc/os-release; then
               echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
             fi
+            apk upgrade -a
             apk add dotnet-sdk-${{ matrix.dotnet_version }} dotnet-doc
             apk add \
               dotnet-sdk-dbg-${{ matrix.dotnet_version }} \
