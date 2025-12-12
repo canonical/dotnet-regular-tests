@@ -10,6 +10,7 @@
     "runtime=mono", // mono does not use lttng
   ],
   "ignoredRIDs":[
+    "alpine", // lttng <=2,13,0 is broken
     "centos",
     "fedora", // see https://github.com/redhat-developer/dotnet-regular-tests/issues/202
     "rhel"
