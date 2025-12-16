@@ -25,8 +25,9 @@ function start_session {
 
   # Create and start session
   lttng create $SESSION_NAME --output $TRACE_FOLDER
-  lttng add-context --userspace --session=$SESSION_NAME --type=vpid
-  lttng enable-event -s $SESSION_NAME -u --tracepoint $TRACE_EVENT
+  lttng enable-channel --userspace channel0
+  lttng add-context --userspace --session=$SESSION_NAME --channel=channel0 --type=vpid
+  lttng enable-event -s $SESSION_NAME -u --tracepoint --channel=channel0 $TRACE_EVENT
   lttng start $SESSION_NAME
 }
 
