@@ -10,7 +10,9 @@ cat /proc/self/mountinfo
 cat /proc/self/cgroup
 
 CGROUPV2=false
-if [[ "$(stat -f -c "%T" /sys/fs/cgroup)" == "cgroup2fs" ]] ; then
+# 63677270 is the hex code for cgroup v2
+# See https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#mounting
+if [[ "$(stat -f -c "%t" /sys/fs/cgroup)" == "63677270" ]] ; then
     CGROUPV2=true
 fi
 
