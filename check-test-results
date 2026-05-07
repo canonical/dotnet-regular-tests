@@ -13,10 +13,7 @@ def ContainsNU1102Error(name, stdout):
                           r"[a-zA-Z0-9.\-_]+::[0-9.]+ "
                           r"is not found in NuGet feeds", stdout)
     else:
-        match = re.search(r"error NU1102: Unable to find package "
-                          r"Microsoft\.NETCore\.App\.Runtime\."
-                          r"(linux-\w+|Mono.browser-wasm) "
-                          r"with version", stdout)
+        match = re.search(r"error NU1102: Unable to find package ", stdout)
     
     return match is not None
 
