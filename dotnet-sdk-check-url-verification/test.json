@@ -1,0 +1,9 @@
+{
+	"name": "dotnet-sdk-check-url-verification",
+	"enabled": true,
+	"requireSdk": true,
+	"version": "8.0",
+	"versionSpecific": false,
+	"type": "bash",
+	"cleanup": false
+}
