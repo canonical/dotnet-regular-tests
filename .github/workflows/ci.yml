@@ -20,9 +20,8 @@ jobs:
         container_image:
           - docker.io/library/ubuntu:22.04
           - docker.io/library/ubuntu:24.04
-          - docker.io/library/ubuntu:25.04
-          - docker.io/library/ubuntu:25.10
           - docker.io/library/ubuntu:26.04
+          - docker.io/library/ubuntu:26.10
         dotnet_version:
           - "8"
           - "9"
@@ -80,7 +79,7 @@ jobs:
             local codename=$(. /etc/os-release && echo $VERSION_CODENAME)
             local ppa_owner=$(echo $ppa | cut -d/ -f1)
             local ppa_name=$(echo $ppa | cut -d/ -f2)
-            
+
             if curl -sf "https://ppa.launchpadcontent.net/${ppa_owner}/${ppa_name}/ubuntu/dists/${codename}/Release" > /dev/null; then
               echo "Adding PPA ${ppa} (supports ${codename})"
               add-apt-repository --yes ppa:${ppa}
