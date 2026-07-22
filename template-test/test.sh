@@ -443,7 +443,11 @@ function testTemplate {
     allCsprojs=(./*.csproj)
     firstCsproj=${allCsprojs[0]}
     if [ -f "${firstCsproj}" ]; then
-        sed -i '0,/<PropertyGroup>/s/<PropertyGroup>/<PropertyGroup><TreatWarningsAsErrors>true<\/TreatWarningsAsErrors>/' "${firstCsproj}"
+        # Treat warnings as errors to catch template quality regressions, but
+        # exclude warnings that reflect the environment rather than the template:
+        # NU1900-NU1905 (NuGet audit/vulnerability data), NU1803 (non-HTTPS source),
+        # NETSDK1057 (preview SDK).
+        sed -i '0,/<PropertyGroup>/s/<PropertyGroup>/<PropertyGroup><TreatWarningsAsErrors>true<\/TreatWarningsAsErrors><WarningsNotAsErrors>NETSDK1057;NU1803;NU1900;NU1901;NU1902;NU1903;NU1904;NU1905<\/WarningsNotAsErrors>/' "${firstCsproj}"
     fi
 
     if [ "${action}" = "new" ] ; then
