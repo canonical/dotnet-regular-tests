@@ -32,7 +32,6 @@ dotnet10Templates=(
     global.json
     globaljson
     grpc
-    mcpserver
     mstest-class
     mstest
     mvc
@@ -309,6 +308,8 @@ template10Actions=\
 # --list output but are safe to ignore. We we don't want to test these
 # because they are known to not work on the platforms we care about.
 templateIgnoreList=(
+    # mcpserver fails on s390x and ppc64le due to missing dependencies in the template
+    mcpserver
     # playwright needs powershell and needs to be interactively used to install browser integration pieces
     mstest-playwright
     nunit-playwright
