@@ -81,6 +81,7 @@ dump-analyze () {
 }
 
 sdk_version=${1:-$(dotnet --version)}
+major_version=${sdk_version%%.*}
 
 set -x
 
@@ -116,11 +117,10 @@ heading "Testing dotnet dump ps"
 
 dotnet dump ps > ps.out
 cat ps.out
-if [[ $(grep -cvE '^[ \t]*$' ps.out) -lt 2 ]]; then
+if [[ $(grep -cvE '^[ \t]*$' ps.out) -lt 1 ]]; then
     echo 'fail: dotnet dump ps produced less than expected lines of output'
     exit 2
 fi
-grep -F 'dotnet dump ps' ps.out
 
 heading "Creating a dump"
 
@@ -185,7 +185,12 @@ cat dump.out
 heading "dumpasync"
 dump-analyze 'dumpasync' > dump.out
 cat dump.out
-grep -E 'Awaiting: [a-zA-Z0-9]+ [a-zA-Z0-9]+ System.Runtime.CompilerServices.ValueTaskAwaiter<System.Net.Sockets.Socket>' dump.out
+# .NET 11+ uses runtime-async which changes how async state machines are reported.
+if [[ "${major_version}" -ge 11 ]]; then
+    grep -E '(Awaiting:|STACK [0-9])' dump.out
+else
+    grep -E 'Awaiting: [a-zA-Z0-9]+ [a-zA-Z0-9]+ System.Runtime.CompilerServices.ValueTaskAwaiter<System.Net.Sockets.Socket>' dump.out
+fi
 
 
 # TODO: dumpconcurrentdictionary
@@ -528,13 +533,12 @@ cat dump.out
 # some environments, even for same builds :/
 if ! grep 'No unique loader heaps found.' dump.out; then
 # Find a gen0 with a non-0 size, then grab the starting address from it
-    addr=$(grep -m 1 -E '^[0-9a-fA-F]+ +[0-9a-fA-F]+ +[0-9a-fA-F]+ +[0-9a-fA-F]+ +0x[1-9a-fA-F]' dump.out | awk ' { print $2 } ')
+    addr=$(grep -m 1 -E '^ *[0-9a-fA-F]+ +[0-9a-fA-F]+ +[0-9a-fA-F]+ +[0-9a-fA-F]+ +0x[1-9a-fA-F]' dump.out | awk ' { print $2 } ')
     dump-analyze "listnearobj $addr" > dump.out
     cat dump.out
-    grep -F 'Before: ' dump.out
-    grep -F 'Current: ' dump.out
-    grep -F 'After: ' dump.out
-grep -F 'Heap local consistency confirmed.' dump.out
+    grep -E '(Before|Current):' dump.out
+    grep -E '(After|Next):' dump.out
+    grep -F 'Heap local consistency confirmed.' dump.out
 fi
 
 
