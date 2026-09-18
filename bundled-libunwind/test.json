@@ -12,6 +12,7 @@
     "os=ubuntu,version=6",
     "os=ubuntu,version=9,arch=x64",
     "os=ubuntu,version=10,arch=x64",
+    "os=ubuntu,version=11,arch=x64"
   ],
   "ignoredRIDs":[
     "alpine",

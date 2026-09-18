@@ -7,5 +7,6 @@
 	"type": "bash",
 	"cleanup": false,
 	"skipWhen": [
+		"os=ubuntu,version=11" // https://github.com/dotnet/dotnet-monitor/issues/9861
 	]
 }
