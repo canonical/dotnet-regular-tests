@@ -11,6 +11,8 @@
     "rhel.9", // no PQC key exchange support
     "centos.8", // no PQC key exchange support
     "centos.9", // no PQC key exchange support
-    "fedora.42" // no PQC key exchange support
+    "fedora.42", // no PQC key exchange support
+    "ubuntu.22.04", // OpenSSL 3.0: no PQC key exchange support (needs >= 3.5)
+    "ubuntu.24.04" // OpenSSL 3.0: no PQC key exchange support (needs >= 3.5)
   ]
 }
