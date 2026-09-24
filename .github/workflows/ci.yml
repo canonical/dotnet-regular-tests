@@ -36,7 +36,7 @@ jobs:
             dotnet_version: "9"
     container:
       image: ${{ matrix.container_image }}
-      options: --security-opt seccomp=unconfined
+      options: --init --security-opt seccomp=unconfined
       env:
         DEBIAN_FRONTEND: noninteractive
     steps:
