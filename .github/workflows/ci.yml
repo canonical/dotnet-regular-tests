@@ -30,7 +30,7 @@ jobs:
         exclude:
           # dotnet8 and dotnet9 are not available for 26.10 due to OpenSSL 4.0 migration.
           # skip those jobs.
-          - container_image: docker.io/library/ubuntu:26.10 
+          - container_image: docker.io/library/ubuntu:26.10
             dotnet_version: "8"
           - container_image: docker.io/library/ubuntu:26.10
             dotnet_version: "9"
