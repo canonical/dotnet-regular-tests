@@ -51,8 +51,10 @@ wait $DOTNET_PID
 echo "== Ending lttng session"
 end_session
 
-CMD="$(command -v babeltrace || true)"
-[ -z "${CMD}" ] && CMD="$(command -v babeltrace2)"
+# Prefer babeltrace2: lttng-tools >= 2.15 writes CTF 2 traces by default,
+# which babeltrace 1.x cannot read. babeltrace2 reads both CTF 1.8 and CTF 2.
+CMD="$(command -v babeltrace2 || true)"
+[ -z "${CMD}" ] && CMD="$(command -v babeltrace)"
 
 # Retrieve trace
 LTTNG_TRACE=$($CMD "$TRACE_FOLDER/ust/uid/$(id -u)/64-bit" | grep "vpid = $DOTNET_PID")
