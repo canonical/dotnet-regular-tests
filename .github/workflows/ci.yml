@@ -28,19 +28,15 @@ jobs:
           - "10"
           - "11"
         exclude:
-          # dotnet8 and dotnet9 are not available for 26.10 (neither in the
-          # archive nor in the dotnet/backports PPA)
-          - container_image: docker.io/library/ubuntu:26.10
+          # dotnet8 and dotnet9 are not available for 26.10 due to OpenSSL 4.0 migration.
+          # skip those jobs.
+          - container_image: docker.io/library/ubuntu:26.10 
             dotnet_version: "8"
           - container_image: docker.io/library/ubuntu:26.10
             dotnet_version: "9"
     container:
       image: ${{ matrix.container_image }}
-      # --init runs a minimal init as PID 1 that reaps orphaned zombie
-      # processes. Without it, zombies left behind by earlier steps make
-      # 'dotnet-dump ps' / 'dotnet-trace ps' crash while scanning /proc
-      # (see https://github.com/dotnet/diagnostics/issues/5903).
-      options: --init --security-opt seccomp=unconfined
+      options: --security-opt seccomp=unconfined
       env:
         DEBIAN_FRONTEND: noninteractive
     steps:
