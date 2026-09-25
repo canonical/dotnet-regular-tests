@@ -23,7 +23,10 @@ for tool in "${!tools[@]}"; do
   # Ignore the exit code because 'dotnet user-secrets' has a non-zero exit for '--help'.
   output=$(dotnet "${tool}" --help 2>&1) || true
 
-  if echo "${output}" | grep -q "${expected}"; then
+  # Use a here-string rather than 'echo | grep -q': grep -q exits on the first
+  # match, which can make echo fail with SIGPIPE ("write error: Broken pipe")
+  # on large outputs, and with 'pipefail' that turns a match into a failure.
+  if grep -q "${expected}" <<< "${output}"; then
     echo "PASS: dotnet ${tool} --help"
   else
     echo "FAIL: dotnet ${tool} --help did not contain '${expected}'"

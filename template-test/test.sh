@@ -507,7 +507,11 @@ function testTemplate {
     fi
 
     dotnet new "${templateName}" 2>&1 | tee "${templateName}.log"
-    if grep -i failed "${templateName}.log"; then
+    # Ignore the informational "MSBuild server unavailable ... the server may
+    # have failed to start. Falling back to an in-process build." message: the
+    # restore still succeeds, but it is common on slow/loaded machines (e.g.
+    # s390x) and would otherwise be reported as a template failure.
+    if grep -iv 'MSBuild server unavailable' "${templateName}.log" | grep -i failed; then
         echo "error: ${templateName} failed."
         failedTests=$((failedTests+1))
         return
