@@ -26,9 +26,17 @@ jobs:
           - "8"
           - "9"
           - "10"
+          - "11"
+        exclude:
+          # dotnet8 and dotnet9 are not available for 26.10 due to OpenSSL 4.0 migration.
+          # skip those jobs.
+          - container_image: docker.io/library/ubuntu:26.10
+            dotnet_version: "8"
+          - container_image: docker.io/library/ubuntu:26.10
+            dotnet_version: "9"
     container:
       image: ${{ matrix.container_image }}
-      options: --security-opt seccomp=unconfined
+      options: --init --security-opt seccomp=unconfined
       env:
         DEBIAN_FRONTEND: noninteractive
     steps:
@@ -89,15 +97,18 @@ jobs:
           }
           cat /etc/os-release
           version_id=$(. /etc/os-release && echo $VERSION_ID)
-          # if release is LTS, add backports and preview PPAs
+          apt-get update && apt-get install --yes software-properties-common
+          # if release is LTS, add backports PPA
           case "$version_id" in
             22.04|24.04|26.04) # update this list as new LTS releases come out
-              echo "Adding backports and previews PPAs."
-              apt-get update && apt-get install --yes software-properties-common
+              echo "Adding backports PPA."
               check_and_add_ppa dotnet/backports
-              check_and_add_ppa dotnet/previews
               ;;
           esac
+          # previews PPA provides preview/RC releases (e.g. .NET 11) for LTS
+          # and interim releases alike
+          echo "Adding previews PPA."
+          check_and_add_ppa dotnet/previews
           dotnet_version_number=$(echo "${{ matrix.dotnet_version }}" | cut -d' ' -f1)
           apt-get update && apt-get install --yes --install-suggests dotnet${dotnet_version_number}
           dotnet --info

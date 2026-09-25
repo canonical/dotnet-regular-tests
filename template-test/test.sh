@@ -369,6 +369,9 @@ templateIgnoreList=(
     # FIXME: enable when Microsoft.Extensions.ServiceDiscovery >= 10.6.0-preview.1.26210.2 is available
     blazor-wasm-servicedefaults
 
+    # mcpserver fails on s390x and ppc64le due to missing dependencies in the template
+    mcpserver
+
     # playwright needs powershell and needs to be interactively used to install browser integration pieces
     mstest-playwright
     nunit-playwright
