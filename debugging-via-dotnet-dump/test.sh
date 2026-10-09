@@ -615,7 +615,11 @@ dump-analyze 'runtimes' > dump.out
 cat dump.out
 grep -E '^#0 .NET Core runtime ([[:digit:]]+(\.[[:digit:]]+)* )?at [0-9a-fA-F]+ size [0-9a-fA-F]+ index [0-9a-fA-F]+$' dump.out
 grep -E '^    Runtime module path: /.*/libcoreclr.so$' dump.out
-grep -E '^        Dac .*/libmscordaccore.so LINUX [^ ]+ Coreclr [0-9a-fA-F]+$' dump.out
+# dotnet-dump >= 10.0.750501 prints only the DAC file name, like the
+# Dbi line below; older versions print the full path. In both cases the DAC is
+# loaded from the runtime directory, so also check that it is actually there.
+grep -E '^        Dac (/.*/)?libmscordaccore\.so LINUX [^ ]+ Coreclr [0-9a-fA-F]+$' dump.out
+test -f "${framework_dir}/libmscordaccore.so"
 grep -E '^        Dbi libmscordbi.so LINUX [^ ]+ Coreclr [0-9a-fA-F]+$' dump.out
 
 
